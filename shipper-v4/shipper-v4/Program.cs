@@ -7,6 +7,7 @@
  */
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace shipper_v4
@@ -30,11 +31,12 @@ namespace shipper_v4
                 new Address("Lauren A. Proffitt", "2269 Boggess Street", "Apt 101", "Wichita Falls", "TX", 76301)
             };
 
-            // List of sample letters using addresses
+            // List of sample letters and packages using addresses
             List<Parcel> parcels = new List<Parcel>
             {
                 new GroundPackage(homes[0], homes[1], 30, 42, 18, 60),
                 new NextDayAirPackage(homes[0], homes[3], 40, 20, 60, 74, 10M),
+                new NextDayAirPackage(homes[4], homes[2], 10, 13, 13, 100, 50M),
                 new TwoDayAirPackage(homes[2], homes[1], 20, 25, 50, 75, TwoDayAirPackage.Delivery.Early),
                 new TwoDayAirPackage(homes[2], homes[3], 40, 40, 20, 76, TwoDayAirPackage.Delivery.Saver),
                 new Letter(homes[2], homes[0], 0.46M),
@@ -45,11 +47,68 @@ namespace shipper_v4
 
             Console.WriteLine("Program 1B");
 
-            foreach (Package package in parcels)
-            {
-                Console.WriteLine(package.ToString());
-                Console.WriteLine(String.Empty.PadLeft(60, '-'));
-            }
+            // Sort parcels by destination ZIP, descending
+
+            var sortByDestZip =
+                from parcel in parcels
+                orderby parcel.DestinationAddress.Zip descending
+                select parcel;
+
+            Console.WriteLine("\nSort parcels by destination ZIP, descending");
+
+            foreach (Parcel parcel in sortByDestZip)
+                Console.WriteLine($"{parcel.DestinationAddress.Zip:D5}");
+
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+
+            // Sort parcels by cost
+
+            var sortByCost =
+                from parcel in parcels
+                orderby parcel.CalcCost()
+                select parcel;
+
+            Console.WriteLine("\nSort parcels by cost");
+
+            foreach (Parcel parcel in sortByCost)
+                Console.WriteLine($"{parcel.CalcCost():C}");
+
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+
+            // Sort by parcel type and then cost (descending)
+
+            var sortByParcelAndCost =
+                from parcel in parcels
+                orderby parcel.GetType().ToString(), parcel.CalcCost() descending
+                select parcel;
+
+            Console.WriteLine("\nSort by parcel type and then cost (descending)");
+
+            foreach (Parcel parcel in sortByParcelAndCost)
+                Console.WriteLine($"{parcel.GetType()} {parcel.CalcCost():C}");
+
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+
+            // Select AirPackages that are heavy and order by weight (descending)
+
+            var sortHeavyAirPackagesAndOrderWeight =
+                from parcel in parcels
+                let airPackage = parcel as AirPackage
+                where parcel is AirPackage
+                where airPackage.IsHeavy()
+                orderby airPackage.Weight descending
+                select airPackage;
+
+            Console.WriteLine("\nSelect AirPackages that are heavy and order by weight (descending)");
+
+            foreach (Parcel parcel in sortHeavyAirPackagesAndOrderWeight)
+                Console.WriteLine($"{parcel.GetType()} {(parcel as AirPackage).Weight}");
+
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
         }
     }
 }
